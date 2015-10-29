@@ -1,8 +1,10 @@
 from flask import Flask, abort
 from flask.ext.restful import Api, Resource, reqparse, fields, marshal
+from flask.ext.httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
 api = Api(app)
+auth = HTTPBasicAuth()
 
 tasks = [
     {
@@ -27,6 +29,7 @@ task_fields = {'title': fields.String,
 
 
 class TaskListAPI(Resource):
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('title', type=str, required=True,
@@ -40,6 +43,7 @@ class TaskListAPI(Resource):
     def get(self):
         return {'tasks': tasks}
 
+    @auth.login_required
     def post(self):
         args = self.reqparse.parse_args()
         task = {
@@ -54,6 +58,8 @@ class TaskListAPI(Resource):
 
 
 class TaskAPI(Resource):
+    decorators = [auth.login_required]
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('title', type=str, location='json')
